@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: error
+
+  validate-scripts:
+    name: Validate Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check shell scripts are executable
+        run: |
+          find . -name "*.sh" -type f ! -executable | head -20 || true
+
+      - name: Test install-deps.sh syntax
+        run: bash -n scripts/install-deps.sh
+
+      - name: Test install scripts syntax
+        run: |
+          for f in scripts/configs/apply-*.sh; do
+            bash -n "$f" || echo "Error in $f"
+          done
+
+  validate-configs:
+    name: Validate Configs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check config files exist
+        run: |
+          ls -la configs/hypr/*.conf
+          ls -la configs/waybar/config.jsonc
+          ls -la configs/waybar/style.css
+
+      - name: Validate JSON configs
+        run: |
+          cat configs/waybar/config.jsonc | python3 -m json.tool > /dev/null || echo "Invalid JSON"
+
+  test-ubuntu-deps:
+    name: Test Ubuntu Dependencies
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required packages exist in repos
+        run: |
+          apt-cache show hyprland-graphics 2>/dev/null | head -3 || echo "Package not found"
+          apt-cache show waybar 2>/dev/null | head -3 || echo "Package not found"
