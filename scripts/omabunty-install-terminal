@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Install a terminal emulator and set it as default for Omabunty
+# Usage: omabunty-install-terminal [alacritty|kitty|ghostty]
+
+set -euo pipefail
+
+if (($# == 0)); then
+  echo "Usage: omabunty-install-terminal [alacritty|kitty|ghostty]"
+  exit 1
+fi
+
+package="$1"
+
+install_terminal() {
+  case "$package" in
+    alacritty)
+      echo "Installing Alacritty..."
+      sudo apt update && sudo apt install -y alacritty
+      mkdir -p ~/.local/share/applications
+      cp /home/jedijed/omabunty/applications/Alacritty.desktop ~/.local/share/applications/
+      update-alternatives --set x-terminal-emulator /usr/bin/alacritty 2>/dev/null || true
+      ;;
+    kitty)
+      echo "Installing Kitty..."
+      sudo apt update && sudo apt install -y kitty
+      update-alternatives --set x-terminal-emulator /usr/bin/kitty 2>/dev/null || true
+      ;;
+    ghostty)
+      echo "Installing Ghostty (from source)..."
+      if ! command -v ghostty &>/dev/null; then
+        sudo apt install -y git meson ninja-build libgtk-4-dev libadwaita-1-dev libsoup-3.0-dev libwebkitgtk-6.0-dev
+        cd /tmp
+        rm -rf ghostty
+        git clone https://github.com/ghostty-org/ghostty.git
+        cd ghostty
+        meson setup build
+        ninja -C build
+        sudo ninja -C build install
+        cd -
+      fi
+      ;;
+    *)
+      echo "Unknown terminal: $package"
+      exit 1
+      ;;
+  esac
+}
+
+update_terminal_preference() {
+  mkdir -p ~/.config
+  case "$package" in
+    alacritty) echo "Alacritty.desktop" > ~/.config/xdg-terminals.list ;;
+    kitty) echo "kitty.desktop" > ~/.config/xdg-terminals.list ;;
+    ghostty) echo "com.mitchellh.ghostty.desktop" > ~/.config/xdg-terminals.list ;;
+  esac
+}
+
+install_terminal
+update_terminal_preference
+
+echo "Terminal $package installed and set as default!"
+echo "Run 'nvim ~/.config/hypr/bindings.conf' to update keybindings"

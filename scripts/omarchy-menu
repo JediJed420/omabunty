@@ -1,0 +1,255 @@
+#!/bin/bash
+
+# Omabunty Menu - Ubuntu equivalent of omarchy-menu
+# Launch with optional submenu: omabunty-menu install
+
+set -euo pipefail
+
+export PATH="$HOME/.local/share/omabunty/bin:$PATH"
+
+BACK_TO_EXIT=false
+
+back_to() {
+  local parent_menu="$1"
+  if [[ $BACK_TO_EXIT == "true" ]]; then
+    exit 0
+  elif [[ -n $parent_menu ]]; then
+    "$parent_menu"
+  else
+    show_main_menu
+  fi
+}
+
+menu() {
+  local prompt="$1"
+  local options="$2"
+  
+  echo -e "$options" | fzf --height=~70% --prompt="$prompt " --reverse --border --ansi
+}
+
+terminal() {
+  alacritty -e bash -c "$@" 2>/dev/null || x-terminal-emulator -e bash -c "$@" || gnome-terminal -e bash -c "$@"
+}
+
+install_pkg() {
+  terminal "echo 'Installing $1...'; sudo apt install -y $2"
+}
+
+install_deb() {
+  local url="$1"
+  local deb_file="/tmp/$(basename "$url")"
+  terminal "cd /tmp && curl -sLo '$deb_file' '$url' && sudo dpkg -i '$deb_file' && sudo apt install -f -y"
+}
+
+show_learn_menu() {
+  case $(menu "Learn" "Keybindings\nNeovim\nBash\nHyprland") in
+  *Keybindings*) terminal "curl -s https://www.lazyvim.org/keymaps | head -100" ;;
+  *Neovim*) terminal "echo 'https://lazyvim.github.io'" ;;
+  *Bash*) terminal "echo 'https://devhints.io/bash'" ;;
+  *Hyprland*) terminal "echo 'https://wiki.hypr.land/'" ;;
+  *) show_main_menu ;;
+  esac
+}
+
+show_trigger_menu() {
+  case $(menu "Trigger" "Screenshot\nScreenrecord\nColor Picker") in
+  *Screenshot*) grim -g "$(slurp)" - | wl-copy ;;
+  *Color*) hyprpicker -a ;;
+  *) show_main_menu ;;
+  esac
+}
+
+show_style_menu() {
+  case $(menu "Style" "Theme\nFont\nBackground") in
+  *Theme*) echo "Theme selection coming soon" ;;
+  *Font*) echo "Font selection coming soon" ;;
+  *Background*) echo "Background selection coming soon" ;;
+  *) show_main_menu ;;
+  esac
+}
+
+show_setup_menu() {
+  case $(menu "Setup" "Audio\nWifi\nBluetooth\nPower\nMonitors\nKeybindings") in
+  *Audio*) terminal "pavucontrol" ;;
+  *Wifi*) terminal "nm-connection-editor" ;;
+  *Bluetooth*) terminal "blueman-manager" ;;
+  *Power*) terminal "gnome-power-manager" ;;
+  *Monitors*) terminal "arandr" ;;
+  *Keybindings*) nano "$HOME/.config/hypr/bindings.conf" ;;
+  *) show_main_menu ;;
+  esac
+}
+
+show_install_menu() {
+  case $(menu "Install" "Package\nWeb App\nTUI\nEditor\nTerminal\nDevelopment\nSystem\nStyle") in
+  *Package*) show_install_package_menu ;;
+  *Web*) show_install_web_menu ;;
+  *TUI*) show_install_tui_menu ;;
+  *Editor*) show_install_editor_menu ;;
+  *Terminal*) show_install_terminal_menu ;;
+  *Development*) show_install_development_menu ;;
+  *System*) show_install_system_menu ;;
+  *Style*) show_install_style_menu ;;
+  *) show_main_menu ;;
+  esac
+}
+
+show_install_package_menu() {
+  case $(menu "Install Package" "GIMP\nAudacity\nLibreOffice\nMarktext\nbtop\nFastfetch\nXournal++") in
+  *GIMP*) install_pkg "GIMP" "gimp" ;;
+  *Audacity*) install_pkg "Audacity" "audacity" ;;
+  *LibreOffice*) install_pkg "LibreOffice" "libreoffice" ;;
+  *Marktext*) terminal "flatpak install -y flathub com.marktext.Marktext" ;;
+  *btop*) install_pkg "btop" "btop" ;;
+  *Fastfetch*) install_pkg "fastfetch" "fastfetch" ;;
+  *Xournal++*) install_pkg "Xournal++" "xournalpp" ;;
+  *) show_install_menu ;;
+  esac
+}
+
+show_install_web_menu() {
+  case $(menu "Install Web App" "Brave\nChromium\nEdge") in
+  *Brave*) install_deb "https://brave-browser-downloads.s3.brave.com/brave-browser_latest_amd64.deb" ;;
+  *Chromium*) install_pkg "Chromium" "chromium-browser" ;;
+  *Edge*) install_deb "https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-stable/microsoft-edge-stable_133.0.2999.118-1_amd64.deb" ;;
+  *) show_install_menu ;;
+  esac
+}
+
+show_install_tui_menu() {
+  case $(menu "Install TUI" "lazygit\nbtop\nFastfetch\nNeoVim\nLazyVim\nhtop\nranger\nncdu") in
+  *lazygit*) 
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -oP '"tag_name": "\K[^"]+' | tr -d 'v')
+    terminal "cd /tmp && curl -sLo lazygit.tar.gz 'https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_amd64.tar.gz' && tar xzf lazygit.tar.gz && sudo mv lazygit /usr/local/bin/"
+  ;;
+  *btop*) install_pkg "btop" "btop" ;;
+  *Fastfetch*) install_pkg "fastfetch" "fastfetch" ;;
+  *NeoVim*) install_pkg "Neovim" "neovim" ;;
+  *LazyVim*) bash "$HOME/omabunty/scripts/configs/apply-lazyvim.sh" ;;
+  *htop*) install_pkg "htop" "htop" ;;
+  *ranger*) install_pkg "ranger" "ranger" ;;
+  *ncdu*) install_pkg "ncdu" "ncdu" ;;
+  *) show_install_menu ;;
+  esac
+}
+
+show_install_editor_menu() {
+  case $(menu "Install Editor" "VSCode\nCursor\nZed\nHelix\nEmacs") in
+  *VSCode*) install_deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" ;;
+  *Cursor*) install_deb "https://cursor.sh/download/linux/x64/deb" ;;
+  *Zed*) install_deb "https://zed.dev/download?platform=linux-deb" ;;
+  *Helix*) install_pkg "Helix" "helix" ;;
+  *Emacs*) install_pkg "Emacs" "emacs" ;;
+  *) show_install_menu ;;
+  esac
+}
+
+show_install_terminal_menu() {
+  case $(menu "Install Terminal" "Alacritty\nKitty\nGhostty") in
+  *Alacritty*) install_pkg "Alacritty" "alacritty" ;;
+  *Kitty*) install_pkg "Kitty" "kitty" ;;
+  *Ghostty*) 
+    terminal "cd /tmp && git clone https://github.com/ghostty-org/ghostty.git && cd ghostty && meson setup build && ninja -C build && sudo ninja -C build install"
+  ;;
+  *) show_install_menu ;;
+  esac
+}
+
+show_install_development_menu() {
+  case $(menu "Install Development" "Ruby\nDocker\nNode.js\nGo\nPHP\nPython\nRust\nJava\n.NET") in
+  *Ruby*) install_pkg "Ruby" "ruby" ;;
+  *Docker*) install_pkg "Docker" "docker.io" ;;
+  *Node*) install_pkg "Node.js" "nodejs" ;;
+  *Go*) install_pkg "Go" "golang" ;;
+  *PHP*) install_pkg "PHP" "php" ;;
+  *Python*) install_pkg "Python" "python3" ;;
+  *Rust*) terminal "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ;;
+  *Java*) install_pkg "Java" "openjdk-17-jdk" ;;
+  *.NET*) install_pkg ".NET" "dotnet-sdk" ;;
+  *) show_install_menu ;;
+  esac
+}
+
+show_install_system_menu() {
+  case $(menu "Install System" "Hyprland\nSDDM\nPicom\nRofi\nWaybar") in
+  *Hyprland*) bash "$HOME/omabunty/scripts/configs/apply-hyprland.sh" ;;
+  *SDDM*) bash "$HOME/omabunty/scripts/configs/apply-sddm.sh" ;;
+  *Picom*) bash "$HOME/omabunty/scripts/configs/apply-picom.sh" ;;
+  *Rofi*) bash "$HOME/omabunty/scripts/configs/apply-rofi.sh" ;;
+  *Waybar*) bash "$HOME/omabunty/scripts/configs/apply-waybar.sh" ;;
+  *) show_install_menu ;;
+  esac
+}
+
+show_install_style_menu() {
+  case $(menu "Install Style" "Theme\nFont") in
+  *Theme*) echo "Theme installation coming soon" ;;
+  *Font*) echo "Font installation coming soon" ;;
+  *) show_install_menu ;;
+  esac
+}
+
+show_remove_menu() {
+  case $(menu "Remove" "Package\nWeb App\nTUI") in
+  *Package*) terminal "sudo apt remove \$(dpkg -l | grep ^ii | awk '{print \$2}' | fzf -m)" ;;
+  *) show_main_menu ;;
+  esac
+}
+
+show_update_menu() {
+  case $(menu "Update" "System\nOmabunty") in
+  *System*) terminal "sudo apt update && sudo apt upgrade -y" ;;
+  *Omabunty*) terminal "cd ~/omabunty && git pull" ;;
+  *) show_main_menu ;;
+  esac
+}
+
+show_about() {
+  echo "Omabunty v1.0"
+  echo "Ubuntu-based Linux distribution"
+  echo "Based on Omarchy by Basecamp"
+}
+
+show_system_menu() {
+  case $(menu "System" "Lock\nLogout\nRestart\nShutdown") in
+  *Lock*) loginctl lock-session ;;
+  *Logout*) loginctl terminate-user $USER ;;
+  *Restart*) systemctl reboot ;;
+  *Shutdown*) systemctl poweroff ;;
+  *) back_to show_main_menu ;;
+  esac
+}
+
+show_main_menu() {
+  choice=$(menu "Omabunty" "Apps\nLearn\nTrigger\nStyle\nSetup\nInstall\nRemove\nUpdate\nAbout\nSystem")
+  
+  case "$choice" in
+    *Apps*) echo "Use: rofi -show drun" ;;
+    *Learn*) show_learn_menu ;;
+    *Trigger*) show_trigger_menu ;;
+    *Style*) show_style_menu ;;
+    *Setup*) show_setup_menu ;;
+    *Install*) show_install_menu ;;
+    *Remove*) show_remove_menu ;;
+    *Update*) show_update_menu ;;
+    *About*) show_about ;;
+    *System*) show_system_menu ;;
+    *) exit 0 ;;
+  esac
+}
+
+if [[ -n $1 ]]; then
+  BACK_TO_EXIT=true
+  case "$1" in
+    install) show_install_menu ;;
+    learn) show_learn_menu ;;
+    style) show_style_menu ;;
+    setup) show_setup_menu ;;
+    remove) show_remove_menu ;;
+    update) show_update_menu ;;
+    system) show_system_menu ;;
+    *) echo "Unknown menu: $1" ;;
+  esac
+else
+  show_main_menu
+fi

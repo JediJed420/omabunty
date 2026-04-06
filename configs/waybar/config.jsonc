@@ -1,0 +1,80 @@
+{
+  "reload_style_on_change": true,
+  "layer": "top",
+  "position": "top",
+  "spacing": 0,
+  "height": 26,
+  "modules-left": ["hyprland/workspaces"],
+  "modules-center": ["clock"],
+  "modules-right": [
+    "tray",
+    "bluetooth",
+    "network",
+    "pulseaudio",
+    "cpu",
+    "battery"
+  ],
+  "hyprland/workspaces": {
+    "on-click": "activate",
+    "format": "{icon}",
+    "format-icons": {
+      "default": "·",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9"
+    }
+  },
+  "clock": {
+    "format": "{:%H:%M}",
+    "tooltip-format": "<big>{:%Y-%m-%d}</big>\n<tt>{:%A}</tt>"
+  },
+  "network": {
+    "format-wifi": "󰤟",
+    "format-ethernet": "󰈀",
+    "format-disconnected": "󰤭",
+    "tooltip-format": "{ifname}: {ipaddr}",
+    "interval": 5
+  },
+  "battery": {
+    "format": "{capacity}% {icon}",
+    "format-charging": "󰂄",
+    "format-discharging": "󰁾",
+    "format-full": "󰁿",
+    "states": {
+      "warning": 30,
+      "critical": 15
+    },
+    "tooltip-format": "{timeTo}, {capacity}%"
+  },
+  "bluetooth": {
+    "format": "󰂯",
+    "format-off": "󰂲",
+    "format-connected": "󰂱",
+    "format-acces": "󰂱",
+    "tooltip-format": "{num_connections} connected"
+  },
+  "pulseaudio": {
+    "format": "{icon}",
+    "format-muted": "󰝟",
+    "format-icons": {
+      "headphone": "󰋋",
+      "default": ["󰕿", "󰖀", "󰕾"]
+    },
+    "on-click": "pavucontrol"
+  },
+  "cpu": {
+    "format": "󰍛 {usage}%",
+    "interval": 2,
+    "on-click": "alacritty -e btop"
+  },
+  "tray": {
+    "icon-size": 14,
+    "spacing": 10
+  }
+}

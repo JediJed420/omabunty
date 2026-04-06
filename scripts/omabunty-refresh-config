@@ -1,0 +1,76 @@
+#!/bin/bash
+set -euo pipefail
+
+# Omabunty Refresh Config - Refresh a config to default
+# Usage: omabunty-refresh-config <config-name>
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_DIR="$SCRIPT_DIR/../config"
+
+source "$SCRIPT_DIR/colors.sh"
+
+refresh_config() {
+    local config="$1"
+    local config_path=""
+    
+    case "$config" in
+        hyprland)
+            config_path="$CONFIG_DIR/hypr"
+            ;;
+        waybar)
+            config_path="$CONFIG_DIR/waybar"
+            ;;
+        alacritty)
+            config_path="$CONFIG_DIR/alacritty"
+            ;;
+        kitty)
+            config_path="$CONFIG_DIR/kitty"
+            ;;
+        sddm)
+            config_path="$CONFIG_DIR/sddm"
+            ;;
+        tmux)
+            config_path="$CONFIG_DIR/tmux"
+            ;;
+        starship)
+            config_path="$CONFIG_DIR/starship.toml"
+            ;;
+        fastfetch)
+            config_path="$CONFIG_DIR/fastfetch"
+            ;;
+        *)
+            error "Unknown config: $config"
+            echo "Available: hyprland, waybar, alacritty, kitty, sddm, tmux, starship, fastfetch"
+            exit 1
+            ;;
+    esac
+    
+    if [[ -d "$config_path" ]]; then
+        info "Refreshing $config configuration..."
+        cp -r "$config_path"/* "$HOME/.config/${config}/" 2>/dev/null || {
+            mkdir -p "$HOME/.config/${config}"
+            cp -r "$config_path"/* "$HOME/.config/${config}/"
+        }
+        success "$config refreshed!"
+    elif [[ -f "$config_path" ]]; then
+        info "Refreshing $config..."
+        mkdir -p "$HOME/.config"
+        cp "$config_path" "$HOME/.config/"
+        success "$config refreshed!"
+    else
+        error "Config not found: $config_path"
+        exit 1
+    fi
+}
+
+main() {
+    if [[ -z $1 ]]; then
+        echo "Usage: omabunty-refresh-config <config-name>"
+        echo "Available: hyprland, waybar, alacritty, kitty, sddm, tmux, starship, fastfetch"
+        exit 1
+    fi
+    
+    refresh_config "$1"
+}
+
+main "$@"

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Show a fuzzy-finder TUI for picking Ubuntu/Debian packages to install.
+# Ubuntu equivalent of omarchy-pkg-install
+
+if ! command -v fzf &>/dev/null; then
+    echo "Installing fzf..."
+    sudo apt update && sudo apt install -y fzf
+fi
+
+fzf_args=(
+  --multi
+  --preview 'apt show {1} 2>/dev/null || echo "Package info not available"'
+  --preview-label='Package Info'
+  --preview-window 'down:65%:wrap'
+  --bind 'alt-p:toggle-preview'
+  --color 'pointer:green,marker:green'
+)
+
+pkg_names=$(apt-cache search . | awk '{print $1}' | fzf "${fzf_args[@]}")
+
+if [[ -n $pkg_names ]]; then
+    echo "Installing: $pkg_names"
+    sudo apt update
+    echo "$pkg_names" | xargs sudo apt install -y
+    echo "Done!"
+fi

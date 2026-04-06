@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Marktext
+GenericName=Markdown Editor
+Exec=flatpak run com.marktext.Marktext %U
+Icon=com.marktext.Marktext
+Type=Application
+StartupNotify=true
+Categories=Office;WordProcessor;
+MimeType=text/markdown;text/x-markdown;

@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Omabunty TUI Installer - Install TUI apps via fzf
+# Equivalent of omarchy-tui-install
+
+set -euo pipefail
+
+if ! command -v fzf &>/dev/null; then
+    echo "Installing fzf..."
+    sudo apt update && sudo apt install -y fzf
+fi
+
+TUIS=(
+    "btop:System monitor"
+    "fastfetch:System info display"
+    "lazygit:Git TUI"
+    "htop:Process viewer"
+    "tmux:Terminal multiplexer"
+    "ranger:File manager"
+    "ncdu:Disk usage analyzer"
+    "tldr:Simplified man pages"
+    "curlie:HTTP client"
+    "jq:JSON processor"
+    "yq:YAML processor"
+    "fzf:Fuzzy finder"
+)
+
+show_tui_menu() {
+    local options=""
+    for item in "${TUIS[@]}"; do
+        local name="${item%%:*}"
+        local desc="${item##*:}"
+        options="$options\n$name:$desc"
+    done
+    
+    echo -e "$options" | fzf --height=~70% --prompt="Install TUI " --reverse --border --ansi
+}
+
+install_tui() {
+    local tui="$1"
+    case "$tui" in
+        btop)
+            sudo apt install -y btop
+            ;;
+        fastfetch)
+            sudo apt install -y fastfetch
+            ;;
+        lazygit)
+            LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -oP '"tag_name": "\K[^"]+' | tr -d 'v')
+            cd /tmp
+            curl -sLo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_amd64.tar.gz"
+            tar xzf lazygit.tar.gz
+            sudo mv lazygit /usr/local/bin/
+            rm lazygit.tar.gz
+            ;;
+        htop)
+            sudo apt install -y htop
+            ;;
+        tmux)
+            sudo apt install -y tmux
+            ;;
+        ranger)
+            sudo apt install -y ranger
+            ;;
+        ncdu)
+            sudo apt install -y ncdu
+            ;;
+        tldr)
+            sudo apt install -y tldr
+            ;;
+        curlie)
+            sudo apt install -y curlie
+            ;;
+        jq)
+            sudo apt install -y jq
+            ;;
+        yq)
+            sudo apt install -y yq
+            ;;
+        fzf)
+            sudo apt install -y fzf
+            ;;
+        *)
+            echo "Unknown TUI: $tui"
+            exit 1
+            ;;
+    esac
+    echo "Installed: $tui"
+}
+
+main() {
+    local selection=$(show_tui_menu)
+    if [[ -n "$selection" ]]; then
+        install_tui "$selection"
+    fi
+}
+
+main "$@"

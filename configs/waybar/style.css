@@ -1,0 +1,62 @@
+@import "../aether/theme/waybar.css";
+
+* {
+  background-color: @background;
+  color: @foreground;
+
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  font-family: 'JetBrainsMono Nerd Font', 'Font Awesome 6 Free', monospace;
+  font-size: 12px;
+}
+
+.modules-left {
+  margin-left: 10px;
+}
+
+.modules-right {
+  margin-right: 10px;
+}
+
+#workspaces button {
+  all: initial;
+  padding: 0 8px;
+  margin: 0 2px;
+}
+
+#workspaces button.empty {
+  opacity: 0.5;
+}
+
+#cpu,
+#battery,
+#pulseaudio,
+#tray {
+  margin: 0 8px;
+}
+
+#clock {
+  margin: 0 12px;
+  font-weight: bold;
+}
+
+#bluetooth {
+  margin: 0 8px;
+}
+
+#network {
+  margin: 0 8px;
+}
+
+tooltip {
+  padding: 4px;
+  background-color: @background;
+  color: @foreground;
+  border: 1px solid @foreground;
+  border-radius: 4px;
+}
+
+tooltip label {
+  color: @foreground;
+}

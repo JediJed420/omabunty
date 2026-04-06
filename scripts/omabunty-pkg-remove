@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Omabunty Package Remover
+# Ubuntu equivalent of omarchy-pkg-remove
+
+set -euo pipefail
+
+if ! command -v fzf &>/dev/null; then
+    echo "Installing fzf..."
+    sudo apt update && sudo apt install -y fzf
+fi
+
+fzf_args=(
+  --multi
+  --preview 'dpkg -s {1} 2>/dev/null | head -10'
+  --preview-label='Package Info'
+  --preview-window 'down:50%'
+  --color 'pointer:green,marker:green'
+)
+
+pkg_names=$(dpkg -l | grep ^ii | awk '{print $2}' | fzf "${fzf_args[@]}")
+
+if [[ -n "$pkg_names" ]]; then
+    echo "Removing: $pkg_names"
+    echo "$pkg_names" | xargs sudo apt remove -y
+    sudo apt autoremove -y
+    echo "Done!"
+fi

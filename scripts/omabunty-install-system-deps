@@ -1,0 +1,34 @@
+#!/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/colors.sh"
+
+install_system_deps() {
+    info "Installing system dependencies for Omabunty..."
+    
+    sudo apt update
+    sudo apt install -y \
+        git \
+        curl \
+        wget \
+        fzf \
+        rofi \
+        dunst \
+        libnotify-bin \
+        network-manager-gnome \
+        blueman \
+        pulseaudio \
+        pavucontrol \
+        brightnessctl \
+        playerctl \
+        upower \
+        acpi
+}
+
+main() {
+    install_system_deps
+    success "System dependencies installed!"
+}
+
+main "$@"

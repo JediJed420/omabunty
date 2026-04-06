@@ -1,0 +1,45 @@
+#!/bin/bash
+set -euo pipefail
+
+# Omabunty System Update - Update system packages
+# Ubuntu equivalent of omarchy-update
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/colors.sh"
+
+update_system() {
+    info "Updating system packages..."
+    sudo apt update
+    sudo apt upgrade -y
+    sudo apt autoremove -y
+    success "System updated!"
+}
+
+update_omabunty() {
+    info "Updating Omabunty..."
+    if [[ -d "$HOME/omabunty" ]]; then
+        cd "$HOME/omabunty"
+        git pull origin dev
+        cd -
+        success "Omabunty updated!"
+    else
+        warn "Omabunty not found in ~/omabunty"
+    fi
+}
+
+case "${1:-all}" in
+    system)
+        update_system
+        ;;
+    omabunty)
+        update_omabunty
+        ;;
+    all)
+        update_system
+        echo ""
+        update_omabunty
+        ;;
+    *)
+        echo "Usage: omabunty-update [system|omabunty|all]"
+        ;;
+esac

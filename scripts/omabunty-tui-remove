@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Omabunty TUI Remover - Remove TUI apps
+# Ubuntu equivalent of omarchy-tui-remove
+
+set -euo pipefail
+
+TUIS=(
+    "btop:System monitor"
+    "fastfetch:System info display"
+    "lazygit:Git TUI"
+    "htop:Process viewer"
+    "tmux:Terminal multiplexer"
+    "ranger:File manager"
+    "ncdu:Disk usage analyzer"
+    "tldr:Simplified man pages"
+    "curlie:HTTP client"
+    "jq:JSON processor"
+    "yq:YAML processor"
+    "fzf:Fuzzy finder"
+)
+
+show_remove_menu() {
+    local options=""
+    for item in "${TUIS[@]}"; do
+        local name="${item%%:*}"
+        local desc="${item##*:}"
+        options="$options\n$name:$desc"
+    done
+    
+    echo -e "$options" | fzf --height=~70% --prompt="Remove TUI " --reverse --border --ansi
+}
+
+remove_tui() {
+    local tui="$1"
+    echo "Removing: $tui"
+    sudo apt remove -y "$tui" 2>/dev/null || echo "$tui not installed via apt"
+}
+
+main() {
+    local selection=$(show_remove_menu)
+    if [[ -n "$selection" ]]; then
+        remove_tui "$selection"
+    fi
+}
+
+main "$@"

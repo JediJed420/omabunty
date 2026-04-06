@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=LazyVim
+GenericName=Neovim
+Comment=Neovim preset with plugins
+Exec=nvim
+Icon=nvim
+Type=Application
+Terminal=true
+Categories=Development;TextEditor;
+Keywords=editor;nvim;vim;code;text;
+MimeType=text/plain;

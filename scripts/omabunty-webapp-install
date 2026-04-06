@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Omabunty Web App Installer
+# Ubuntu equivalent of omarchy-webapp-install
+
+set -euo pipefail
+
+ICON_DIR="$HOME/.local/share/applications/icons"
+DESKTOP_DIR="$HOME/.local/share/applications"
+
+read_app_info() {
+    echo "Let's create a new web app..."
+    read -p "App Name: " APP_NAME
+    read -p "App URL [https://example.com]: " APP_URL
+    
+    if [[ -z "$APP_URL" ]]; then
+        APP_URL="https://example.com"
+    fi
+    
+    if [[ ! $APP_URL =~ ^[a-zA-Z][a-zA-Z+.-]*: ]]; then
+        APP_URL="https://$APP_URL"
+    fi
+    
+    read -p "Icon URL (or press Enter for auto): " ICON_REF
+}
+
+create_webapp() {
+    local app_name="$1"
+    local app_url="$2"
+    local icon_ref="$3"
+    
+    mkdir -p "$ICON_DIR"
+    
+    local icon_path=""
+    if [[ -z "$icon_ref" ]]; then
+        icon_path="$ICON_DIR/${app_name}.png"
+        if curl -fsSL -o "$icon_path" "https://www.google.com/s2/favicons?domain=${app_url}&sz=128"; then
+            if [[ -s "$icon_path" ]]; then
+                icon_ref="$icon_path"
+            fi
+        fi
+    fi
+    
+    if [[ "$icon_ref" =~ ^https?:// ]]; then
+        icon_path="$ICON_DIR/${app_name}.png"
+        if ! curl -fsSL -o "$icon_path" "$icon_ref" || [[ ! -s "$icon_path" ]]; then
+            echo "Failed to download icon, using default"
+            icon_path="web-app"
+        fi
+    else
+        icon_path="$icon_ref"
+    fi
+    
+    local desktop_file="$DESKTOP_DIR/${app_name}.desktop"
+    
+    cat > "$desktop_file" << EOF
+[Desktop Entry]
+Version=1.0
+Name=$app_name
+Comment=$app_name web app
+Exec=xdg-open $app_url
+Terminal=false
+Type=Application
+Icon=$icon_path
+StartupNotify=true
+Categories=Network;WebBrowser;
+EOF
+    
+    chmod +x "$desktop_file"
+    update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+    
+    echo "Web app '$app_name' created!"
+    echo "  URL: $app_url"
+    echo "  Desktop entry: $desktop_file"
+}
+
+if (( $# >= 2 )); then
+    APP_NAME="$1"
+    APP_URL="$2"
+    ICON_REF="${3:-}"
+    create_webapp "$APP_NAME" "$APP_URL" "$ICON_REF"
+else
+    read_app_info
+    create_webapp "$APP_NAME" "$APP_URL" "${ICON_REF:-}"
+fi
