@@ -19,15 +19,24 @@ jobs:
             debootstrap \
             squashfs-tools \
             xorriso \
-            wget
+            wget \
+            genisoimage
 
-      - name: Build ISO
+      - name: Download Ubuntu 24.04 ISO
         run: |
+          wget -O /tmp/ubuntu-24.04-live.iso \
+            https://releases.ubuntu.com/24.04/ubuntu-24.04.4-desktop-amd64.iso \
+            --progress=bar:force
+
+      - name: Build Omabunty ISO
+        run: |
+          chmod +x iso/build-iso-simple.sh
           cd iso
-          chmod +x build-iso.sh
-          # Skip actual ISO build (takes too long)
-          echo "ISO build script ready"
-          ls -la build-iso.sh
+          ./build-iso-simple.sh
+
+      - name: Verify ISO exists
+        run: |
+          ls -lh iso/build/omabunty-24.04.iso
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
@@ -35,4 +44,3 @@ jobs:
           name: omabunty-iso
           path: iso/build/omabunty-24.04.iso
           retention-days: 7
-        continue-on-error: true
