@@ -18,7 +18,7 @@ apply_plymouth_theme() {
     info "Creating Omabunty Plymouth theme..."
     sudo mkdir -p "$theme_dir"
     
-    sudo cp "$SCRIPT_DIR/../configs/plymouth/"* "$theme_dir/"
+    sudo cp "$SCRIPT_DIR/../../config/plymouth/"* "$theme_dir/"
     
     sudo update-alternatives --install \
         /usr/share/plymouth/themes/default.plymouth \
