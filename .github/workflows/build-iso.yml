@@ -12,35 +12,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            debootstrap \
-            squashfs-tools \
-            xorriso \
-            wget \
-            genisoimage
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y xorriso squashfs-tools
 
       - name: Download Ubuntu 24.04 ISO
-        run: |
-          wget -O /tmp/ubuntu-24.04-live.iso \
-            https://releases.ubuntu.com/24.04/ubuntu-24.04.4-desktop-amd64.iso \
-            --progress=bar:force
+        run: wget -O ubuntu-24.04.iso https://releases.ubuntu.com/24.04/ubuntu-24.04.4-desktop-amd64.iso
 
-      - name: Build Omabunty ISO
+      - name: Extract ISO
         run: |
-          chmod +x iso/build-iso-simple.sh
-          cd iso
-          ./build-iso-simple.sh
+          mkdir -p build/image
+          sudo mount -o loop ubuntu-24.04.iso /mnt
+          sudo cp -r /mnt/* build/image/
+          sudo cp -r /mnt/.disk build/image/ 2>/dev/null || true
+          sudo umount /mnt
 
-      - name: Verify ISO exists
+      - name: Add overlay
         run: |
-          ls -lh iso/build/omabunty-24.04.iso
+          echo "Omabunty 24.04 LTS" > build/image/.disk/info
+          mkdir -p build/image/omabunty
+          cp -r scripts build/image/omabunty/
+          cp -r configs build/image/omabunty/
+          cp -r config build/image/omabunty/ 2>/dev/null || true
+          chmod +x build/image/omabunty/scripts/*.sh 2>/dev/null || true
 
-      - name: Upload ISO artifact
+      - name: Build ISO
+        run: |
+          xorriso -as mkisofs -r -V "Omabunty 24.04" -o omabunty-24.04.iso -cache-inodes -joliet -rock -partition_offset 16 build/image/
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: omabunty-iso
-          path: iso/build/omabunty-24.04.iso
+          path: omabunty-24.04.iso
           retention-days: 7
